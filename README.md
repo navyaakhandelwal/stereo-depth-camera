@@ -1,104 +1,159 @@
-# Stereo Vision Project — Run Order & Instructions
+# Stereo Vision Depth Camera
 
-## Folder Structure
+Real-time depth estimation using a dual-camera stereo vision system — from raw frames to 3D scene understanding.
+
+
+---
+
+##  Overview
+
+This project implements a real-time stereo vision pipeline for depth estimation using a synchronized dual-camera setup. It covers the complete workflow — from camera calibration and stereo rectification to disparity computation and depth visualization — enabling 3D scene understanding.
+
+Depth is computed using:
+
+```
+depth = (focal_length × baseline) / disparity
+```
+
+---
+
+## Features
+
+* Dual-camera stereo setup for synchronized real-time capture
+* Camera calibration (intrinsics and extrinsics)
+* Stereo rectification for epipolar alignment
+* Disparity computation using StereoSGBM
+* Depth estimation from disparity
+* Real-time visualization with FPS display
+
+---
+
+##  Tech Stack
+
+| Tool                          | Purpose                               |
+| ----------------------------- | ------------------------------------- |
+| Python 3.8+                   | Core language                         |
+| OpenCV (with contrib modules) | Calibration, rectification, disparity |
+| NumPy                         | Matrix operations                     |
+
+---
+
+##  Project Structure
 
 ```
 stereo_vision/
-├── calib_left/          ← auto-filled by step1_capture_left.py
-├── calib_right/         ← auto-filled by step1b_capture_right.py
-├── stereo_left/         ← auto-filled by step3_stereo_capture.py
-├── stereo_right/        ← auto-filled by step3_stereo_capture.py
 │
-├── step1_capture_left.py        ← Capture left camera calibration images
-├── step1b_capture_right.py      ← Capture right camera calibration images
-├── step2_calibrate_individual.py← Compute K and D for both cameras
-├── step3_stereo_capture.py      ← Capture synchronized stereo pairs
-├── step4_stereo_calibrate.py    ← Compute R and T (stereo extrinsics)
-├── step5_rectify_preview.py     ← Live check: are both cameras aligned?
-├── step6_depth_full.py          ← 4-panel depth viewer (full quality)
-└── step7_depth_map.py           ← Compact depth map with metre labels
+├── calib_left/
+├── calib_right/
+├── stereo_left/
+├── stereo_right/
+│
+├── camera_index.py
+├── step1_capture_left.py
+├── step1b_capture_right.py
+├── step2_calibrate_individual.py
+├── step3_stereo_capture.py
+├── step4_stereo_calibrate.py
+├── step5_rectify_preview.py
+├── step6_depth_full.py
+├── step7_depth_map.py
+└── README.md
 ```
 
 ---
 
-## Install Dependencies (run once)
+##  Installation
 
 ```bash
-pip install opencv-python opencv-contrib-python numpy
+pip install opencv-contrib-python numpy
 ```
 
 ---
 
-## Run Order
+##  Usage
 
-### PHASE 1 — Calibrate each camera individually
+### Step 0 — Detect Camera Indices
+
+```bash
+python camera_index.py
+```
+
+---
+
+### Phase 1 — Individual Calibration
 
 ```bash
 python step1_capture_left.py
-```
-- Point chessboard at LEFT camera (index 4)
-- Press S to save ~20 images at different angles/distances
-- Press Q when done
-
-```bash
 python step1b_capture_right.py
-```
-- Same thing for RIGHT camera (index 2)
-
-```bash
 python step2_calibrate_individual.py
 ```
-- Reads calib_left/ and calib_right/
-- Prints K_L, D_L, K_R, D_R
-- RMS should be < 1.0 — if higher, recapture more images
-- Copy the printed values into step4_stereo_calibrate.py (already filled with example values)
 
 ---
 
-### PHASE 2 — Stereo calibration
+### Phase 2 — Stereo Calibration
 
 ```bash
 python step3_stereo_capture.py
-```
-- Hold chessboard so BOTH cameras see it simultaneously
-- Press S to save a synchronized pair (~20 pairs)
-- Press ESC when done
-
-```bash
 python step4_stereo_calibrate.py
 ```
-- Prints Stereo RMS, Translation T, Baseline
-- Stereo RMS should be < 1.0
-- Copy R and T into step5/step6/step7 if they changed from defaults
 
 ---
 
-### PHASE 3 — Verify and run depth
+### Phase 3 — Depth Estimation
 
 ```bash
 python step5_rectify_preview.py
-```
-- Shows rectified live view with green horizontal lines
-- Lines should pass through the same features in both frames
-- If misaligned, redo calibration
-
-```bash
 python step6_depth_full.py
-```
-- 4-panel view: Rectified Left | Rectified Right | Disparity | Depth
-- Best for debugging and checking quality
-
-```bash
 python step7_depth_map.py
 ```
-- Compact single depth map with distance values in metres
-- Best for live use
 
 ---
 
-## Tips
+##  Pipeline
 
-- Keep the chessboard flat and fully visible when capturing
-- Vary the angle and distance of the chessboard during capture
-- A baseline (camera separation) of ~10cm works well for 0.5–5m range
-- If depth looks noisy in step6/7, increase images in calibration steps
+```
+Dual Camera Capture
+        ↓
+Individual Calibration (Intrinsics)
+        ↓
+Stereo Calibration (R, T)
+        ↓
+Rectification
+        ↓
+Disparity (StereoSGBM)
+        ↓
+Depth Estimation
+        ↓
+Real-time Visualization
+```
+
+---
+
+##  Configuration
+
+| Parameter  | Value      |
+| ---------- | ---------- |
+| Resolution | 640 × 480  |
+| Algorithm  | StereoSGBM |
+
+Performance (FPS) depends on system and camera setup.
+
+---
+
+##  Notes
+
+* Good calibration is critical for accurate depth
+* Use varied angles and distances during calibration
+* Ensure consistent lighting for better results
+* Baseline distance affects depth accuracy
+
+---
+
+##  Future Work
+
+* Improve depth in low-texture regions
+* Integrate object detection for depth-aware perception
+* Optimize for higher FPS and resolution
+* Add point cloud generation
+
+

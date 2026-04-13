@@ -79,7 +79,6 @@ while True:
     rectL = cv2.remap(frameL, mapLx, mapLy, cv2.INTER_LINEAR)
     rectR = cv2.remap(frameR, mapRx, mapRy, cv2.INTER_LINEAR)
 
-    # 🔥 STEP 1: STRICT COMMON ROI
     x1, y1, w1, h1 = roi1
     x2, y2, w2, h2 = roi2
 
@@ -104,8 +103,8 @@ while True:
 
     disp = wls.filter(dispL, grayL, None, dispR)
 
-    # 🔥 STEP 2: REMOVE INVALID REGION (MAIN FIX)
-    disp[:, :50] = 0   # force remove left strip
+  
+    disp[:, :50] = 0   
 
     disp = cv2.medianBlur(disp, 5)
     disp = cv2.bilateralFilter(disp, 9, 75, 75)

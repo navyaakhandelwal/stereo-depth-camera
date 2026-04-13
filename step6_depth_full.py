@@ -6,8 +6,7 @@ DISPLAY_RES = (1280, 720)
 COMPUTE_RES = (640, 480)
 MAX_DEPTH   = 10
 
-# ⚠️ Use focal from P1 instead of hardcoding
-# f = 922  ❌ remove this
+
 B = 0.1035
 
 K_L = np.array([[921.41524262, 0, 343.05532474],
@@ -33,7 +32,6 @@ R1, R2, P1, P2, Q, _, _ = cv2.stereoRectify(
     flags=cv2.CALIB_ZERO_DISPARITY, alpha=0
 )
 
-# ✅ Extract focal length correctly
 f = P1[0, 0]
 
 mapLx, mapLy = cv2.initUndistortRectifyMap(K_L, D_L, R1, P1, image_size, cv2.CV_32FC1)
@@ -41,7 +39,7 @@ mapRx, mapRy = cv2.initUndistortRectifyMap(K_R, D_R, R2, P2, image_size, cv2.CV_
 
 # ================= SGBM =================
 WIN      = 5
-MAX_DISP = 128  # must be multiple of 16
+MAX_DISP = 128  
 
 stereoL = cv2.StereoSGBM_create(
     minDisparity=0,
@@ -59,10 +57,10 @@ stereoL = cv2.StereoSGBM_create(
 stereoR = cv2.ximgproc.createRightMatcher(stereoL)
 
 wls = cv2.ximgproc.createDisparityWLSFilter(stereoL)
-wls.setLambda(12000)       # 🔥 better smoothing
+wls.setLambda(12000)      
 wls.setSigmaColor(1.5)
 
-# ================= DEPTH =================
+
 def disp_to_depth(disp):
     depth = np.zeros_like(disp, dtype=np.float32)
     mask = disp > 1
@@ -90,11 +88,9 @@ while True:
     if not retL or not retR:
         break
 
-    # ================= RECTIFY =================
     rectL = cv2.remap(frameL, mapLx, mapLy, cv2.INTER_LINEAR)
     rectR = cv2.remap(frameR, mapRx, mapRy, cv2.INTER_LINEAR)
 
-    # ================= PREPROCESS =================
     Lg = cv2.cvtColor(rectL, cv2.COLOR_BGR2GRAY)
     Rg = cv2.cvtColor(rectR, cv2.COLOR_BGR2GRAY)
 
@@ -115,14 +111,12 @@ while True:
 
     fps = 1 / (time.time() - t0)
 
-    # ================= VISUAL =================
     disp_vis = cv2.normalize(disp, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     depth_vis = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
 
     disp_color = cv2.applyColorMap(disp_vis, cv2.COLORMAP_JET)
     depth_color = cv2.applyColorMap(depth_vis, cv2.COLORMAP_PLASMA)
 
-    # ================= FIX LAYOUT =================
     h, w = 480, 640
     rectL = cv2.resize(rectL, (w, h))
     rectR = cv2.resize(rectR, (w, h))
@@ -134,7 +128,6 @@ while True:
 
     frame = np.vstack((top, bottom))
 
-    # Scale to full screen properly
     frame = cv2.resize(frame, DISPLAY_RES)
 
     cv2.putText(frame, f"FPS: {fps:.2f}", (30, 50),
